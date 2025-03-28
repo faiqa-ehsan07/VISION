@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VISION - Art Gallery</title>
+    <link rel="stylesheet" href="../assets/css/styles.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <header>
+        <h1 class="nav-title">VISION</h1>
+        <nav>
+            <ul class="navbar">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="gallery.html">Gallery</a></li>
+                <li><a href="faq.html">FAQ</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <!-- Hero Section with Carousel -->
+        <section class="hero">
+            <div class="carousel">
+                <!-- Carousel items will be dynamically added here -->
+                <button class="carousel-control prev">❮</button>
+                <button class="carousel-control next">❯</button>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section class="gallery" style="flex-direction: column;">
+            <h2>Gallery</h2>
+            <div id="gallery-container" class="gallery-grid" style="display: flex
+            ;
+                flex-wrap: wrap;
+                justify-content: space-around;">
+                <!-- Cards will be dynamically loaded here -->
+            </div>
+            <button id="load-more" class="button">Load More</button>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2025 VISION . All rights reserved.</p>
+    </footer>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="../assets/js/scripts.js"></script>
+</body>
+</html>
