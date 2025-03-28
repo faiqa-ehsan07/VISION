@@ -22,14 +22,13 @@ nextButton.addEventListener('click', () => {
     showCarouselItem(currentIndex);
 });
 
-// Gallery Infinite Scroll
-const galleryContainer = document.getElementById('gallery-container');
-const loadMoreButton = document.getElementById('load-more');
-let page = 1;
-
 // Unsplash API Configuration
 const UNSPLASH_API_URL = 'https://api.unsplash.com/photos';
-const UNSPLASH_ACCESS_KEY = 'z0BTcl6hLgjUI32ha6Y0-nfJq_BgRv0sc_MGbGGXwAw'; // Replace with your Unsplash API Access Key
+const UNSPLASH_ACCESS_KEY = 'z0BTcl6hLgjUI32ha6Y0-nfJq_BgRv0sc_MGbGGXwAw'; // Replace with your Unsplash API key
+const IMAGE_COUNT = 9; // Number of images to fetch per page
+const galleryContainer = document.getElementById('artwork-grid');
+const loadMoreButton = document.getElementById('load-more');
+let page = 1; // Current page for pagination
 
 // Load Carousel Images
 async function loadCarouselImages() {
@@ -137,7 +136,44 @@ async function loadGalleryImages() {
     }
 }
 
-loadMoreButton.addEventListener('click', loadGalleryImages);
+// Function to fetch images from Unsplash API
+async function fetchImages() {
+    try {
+        const response = await fetch(`${UNSPLASH_API_URL}?page=${page}&per_page=${IMAGE_COUNT}&client_id=${UNSPLASH_ACCESS_KEY}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const images = await response.json();
+
+        // Populate the gallery with fetched images
+        images.forEach(image => {
+            const artworkItem = document.createElement('div');
+            artworkItem.classList.add('artwork-item');
+            artworkItem.innerHTML = `
+                <img src="${image.urls.small}" alt="${image.alt_description || 'Artwork'}">
+                <div class="artwork-info">
+                    <h3>${image.alt_description || 'Untitled'}</h3>
+                    <p>Photographer: ${image.user.name || 'Unknown'}</p>
+                    <a href="${image.urls.full}" download class="download-icon" title="Download">
+                        <i class="fas fa-download"></i>
+                    </a>
+                </div>
+            `;
+            galleryContainer.appendChild(artworkItem);
+        });
+
+        // Increment the page for the next fetch
+        page++;
+    } catch (error) {
+        console.error('Error fetching images:', error);
+    }
+}
+
+// Fetch and display images on page load
+fetchImages();
+
+// Load more images when the "Load More" button is clicked
+loadMoreButton.addEventListener('click', fetchImages);
 
 // Initial Load
 loadCarouselImages();
