@@ -1,108 +1,48 @@
-// Carousel Functionality
-const carouselItemsContainer = document.querySelector('.carousel');
-const prevButton = document.querySelector('.carousel-control.prev');
-const nextButton = document.querySelector('.carousel-control.next');
-let carouselImages = [];
-let currentIndex = 0;
-
-function showCarouselItem(index) {
-    const carouselItems = document.querySelectorAll('.carousel-item');
-    carouselItems.forEach((item, i) => {
-        item.classList.toggle('active', i === index);
-    });
-}
-
-prevButton.addEventListener('click', () => {
-    currentIndex = (currentIndex - 1 + carouselImages.length) % carouselImages.length;
-    showCarouselItem(currentIndex);
-});
-
-nextButton.addEventListener('click', () => {
-    currentIndex = (currentIndex + 1) % carouselImages.length;
-    showCarouselItem(currentIndex);
-});
-
 // Unsplash API Configuration
 const UNSPLASH_API_URL = 'https://api.unsplash.com/photos';
 const UNSPLASH_ACCESS_KEY = 'z0BTcl6hLgjUI32ha6Y0-nfJq_BgRv0sc_MGbGGXwAw'; // Replace with your Unsplash API key
 const IMAGE_COUNT = 9; // Number of images to fetch per page
-const galleryContainer = document.getElementById('artwork-grid');
+const carouselContainer = document.querySelector('.carousel');
+const galleryContainer = document.getElementById('gallery-container');
 const loadMoreButton = document.getElementById('load-more');
 let page = 1; // Current page for pagination
 
-// Load Carousel Images
+// Function to fetch images from Unsplash API
+async function fetchImages() {
+    try {
+        const response = await fetch(`${UNSPLASH_API_URL}?page=${page}&per_page=${IMAGE_COUNT}&client_id=${UNSPLASH_ACCESS_KEY}`);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching images:', error);
+        return [];
+    }
+}
+
+// Function to load carousel images
 async function loadCarouselImages() {
     try {
-        const response = await axios.get(`${UNSPLASH_API_URL}?page=1&per_page=5`, {
-            headers: {
-                Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
-            }
-        });
-        carouselImages = response.data;
-
-        carouselImages.forEach((image, index) => {
+        const images = await fetchImages();
+        images.slice(0, 5).forEach((image, index) => {
             const carouselItem = document.createElement('div');
             carouselItem.classList.add('carousel-item');
             if (index === 0) carouselItem.classList.add('active'); // Set the first image as active
             carouselItem.innerHTML = `
                 <img src="${image.urls.regular}" alt="${image.alt_description || 'Carousel Image'}">
             `;
-            carouselItemsContainer.insertBefore(carouselItem, prevButton); // Add before the control buttons
+            carouselContainer.insertBefore(carouselItem, carouselContainer.querySelector('.carousel-control.next'));
         });
     } catch (error) {
         console.error('Error loading carousel images:', error);
     }
 }
 
-// Function to toggle the heart icon state
-function toggleHeartIcon(event) {
-    const heartIcon = event.target;
-    if (heartIcon.classList.contains('fas')) {
-        // If already liked, change to unliked state
-        heartIcon.classList.remove('fas'); // Solid heart
-        heartIcon.classList.add('far'); // Outline heart
-    } else {
-        // If unliked, change to liked state
-        heartIcon.classList.remove('far'); // Outline heart
-        heartIcon.classList.add('fas'); // Solid heart
-    }
-}
-
-// Function to programmatically download an image
-function downloadImage(url, filename) {
-    fetch(url, { mode: 'cors' }) // Fetch the image with CORS enabled
-        .then(response => response.blob()) // Convert the response to a Blob
-        .then(blob => {
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob); // Create a temporary URL for the Blob
-            link.download = filename; // Set the filename for the download
-            document.body.appendChild(link);
-            link.click(); // Trigger the download
-            document.body.removeChild(link); // Clean up the temporary link
-        })
-        .catch(error => console.error('Error downloading the image:', error));
-}
-
-// Add event listeners to all download icons
-document.querySelectorAll('.download-icon').forEach(icon => {
-    icon.addEventListener('click', event => {
-        event.preventDefault(); // Prevent default link behavior
-        const url = icon.getAttribute('href'); // Get the image URL
-        const filename = url.split('/').pop(); // Extract the filename from the URL
-        downloadImage(url, filename); // Call the download function
-    });
-});
-
-// Load Gallery Images
+// Function to load gallery images
 async function loadGalleryImages() {
     try {
-        const response = await axios.get(`${UNSPLASH_API_URL}?page=${page}&per_page=9`, {
-            headers: {
-                Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
-            }
-        });
-        const images = response.data;
-
+        const images = await fetchImages();
         images.forEach(image => {
             const card = document.createElement('div');
             card.classList.add('gallery-card');
@@ -130,50 +70,39 @@ async function loadGalleryImages() {
             heartButton.addEventListener('click', toggleHeartIcon);
         });
 
+        // Increment the page for the next fetch
         page++;
     } catch (error) {
         console.error('Error loading gallery images:', error);
     }
 }
 
-// Function to fetch images from Unsplash API
-async function fetchImages() {
-    try {
-        const response = await fetch(`${UNSPLASH_API_URL}?page=${page}&per_page=${IMAGE_COUNT}&client_id=${UNSPLASH_ACCESS_KEY}`);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const images = await response.json();
-
-        // Populate the gallery with fetched images
-        images.forEach(image => {
-            const artworkItem = document.createElement('div');
-            artworkItem.classList.add('artwork-item');
-            artworkItem.innerHTML = `
-                <img src="${image.urls.small}" alt="${image.alt_description || 'Artwork'}">
-                <div class="artwork-info">
-                    <h3>${image.alt_description || 'Untitled'}</h3>
-                    <p>Photographer: ${image.user.name || 'Unknown'}</p>
-                    <a href="${image.urls.full}" download class="download-icon" title="Download">
-                        <i class="fas fa-download"></i>
-                    </a>
-                </div>
-            `;
-            galleryContainer.appendChild(artworkItem);
-        });
-
-        // Increment the page for the next fetch
-        page++;
-    } catch (error) {
-        console.error('Error fetching images:', error);
-    }
+// Function to toggle the heart icon state
+function toggleHeartIcon(event) {
+    const heartIcon = event.target;
+    heartIcon.classList.toggle('fas'); // Solid heart
+    heartIcon.classList.toggle('far'); // Outline heart
 }
 
-// Fetch and display images on page load
-fetchImages();
+// Function to programmatically download an image
+function downloadImage(url, filename) {
+    fetch(url, { mode: 'cors' }) // Fetch the image with CORS enabled
+        .then(response => response.blob()) // Convert the response to a Blob
+        .then(blob => {
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob); // Create a temporary URL for the Blob
+            link.download = filename; // Set the filename for the download
+            document.body.appendChild(link);
+            link.click(); // Trigger the download
+            document.body.removeChild(link); // Clean up the temporary link
+        })
+        .catch(error => console.error('Error downloading the image:', error));
+}
 
 // Load more images when the "Load More" button is clicked
-loadMoreButton.addEventListener('click', fetchImages);
+if (loadMoreButton) {
+    loadMoreButton.addEventListener('click', loadGalleryImages);
+}
 
 // Initial Load
 loadCarouselImages();
